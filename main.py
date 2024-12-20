@@ -107,7 +107,7 @@ def on_message(client, userdata, msg):
         # Forward the message to all active WebSocket clients
         for ws in websockets:
             try:
-                ws.send(data)
+                ws.send(json.dumps(data))
             except WebSocketError:
                 logger.debug("*** Error sending message to WebSocket.")
 
@@ -162,26 +162,30 @@ def get_data():
 @app.route('/ws')
 def websocket_endpoint():
     """WebSocket endpoint."""
+    # Check if the request is a WebSocket connection
     ws = request.environ.get('wsgi.websocket')
     if not ws:
         return "WebSocket connection required", 400
 
-    # Add the WebSocket to the global list
+    # Add the WebSocket to the global list of connections
     websockets.append(ws)
+    logger.debug("*** New WebSocket connection established.")
 
     try:
         while True:
-            # Keep the connection alive (No receive logic needed here for MQTT forwarding)
-            message = ws.receive()
-            if message is None:
-                break  # Close if client disconnects
-    except WebSocketError:
-        logger.debug("*** WebSocket disconnected.")
+            pass
+            # Keep the connection alive; no need to receive anything unless you want to
+            # message = ws.receive()  # Optionally, you can process any received messages
+            # if message is None:
+            #    break  # WebSocket connection closed, break the loop
+    except WebSocketError as e:
+        logger.debug(f"*** WebSocket error: {str(e)}")
     finally:
-        # Remove the WebSocket from the global list on disconnect
+        # Remove the WebSocket from the list when it disconnects
         websockets.remove(ws)
+        logger.debug("*** WebSocket disconnected.")
 
-    return ""
+    return "WS CLOSED"
 
 
 def main():
