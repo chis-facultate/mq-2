@@ -1,4 +1,5 @@
 from gevent import monkey
+
 monkey.patch_all()
 
 import logging
@@ -11,6 +12,7 @@ from flask import Flask, request, render_template, jsonify
 from gevent import pywsgi
 from geventwebsocket.handler import WebSocketHandler
 from geventwebsocket.exceptions import WebSocketError
+from geventwebsocket import WebSocketServer
 
 # Global variables
 app = Flask(__name__)
@@ -102,11 +104,10 @@ def on_message(client, userdata, msg):
         # Save to MongoDB
         save_to_database(data)
 
-        # Emit data to WebSocket clients
         # Forward the message to all active WebSocket clients
         for ws in websockets:
             try:
-                ws.send(payload)
+                ws.send(data)
             except WebSocketError:
                 logger.debug("*** Error sending message to WebSocket.")
 
@@ -190,11 +191,12 @@ def main():
     #mqtt_thread_instance.start()
     mqtt_thread()
 
-    logger.debug('******** Starting Flask-SocketIO server...')
+    logger.debug('******** Starting server...')
     #socketio.run(app, host='127.0.0.1', port=5000, debug=True)
     # Start the Flask server with Gevent WebSocket support
-    server = pywsgi.WSGIServer(('0.0.0.0', 5000), app, handler_class=WebSocketHandler)
-    print("Server running on http://0.0.0.0:5000")
+    # server = pywsgi.WSGIServer(('0.0.0.0', 5401), app, handler_class=WebSocketHandler)
+    server = WebSocketServer(('0.0.0.0', 8006), app)
+    logger.debug("**** Server running")
     server.serve_forever()
 
 
