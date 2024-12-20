@@ -8,11 +8,14 @@ import datetime
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 from flask import Flask, request, render_template, jsonify
-from flask_socketio import SocketIO
+from gevent import pywsgi
+from geventwebsocket.handler import WebSocketHandler
+from geventwebsocket.exceptions import WebSocketError
 
 # Global variables
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode='gevent', logger=True, engineio_logger=True)  # Using Gevent as async mode
+websockets = []
+# socketio = SocketIO(app, async_mode='gevent', logger=True, engineio_logger=True)  # Using Gevent as async mode
 
 # Set up logging
 logging.basicConfig(
@@ -57,6 +60,30 @@ def on_connect(client, userdata, flags, rc):
         logger.debug(f"******** Failed to connect, return code {rc}")
 
 
+# def on_message(client, userdata, msg):
+#     """Callback when a message is received from the MQTT broker."""
+#     try:
+#         payload = json.loads(msg.payload.decode())
+#         timestamp = payload["timestamp"]
+#         value = float(payload["value"])
+#
+#         logger.debug(f"******** Data received -> Timestamp: {timestamp}, Value: {value}")
+#
+#         data = {
+#             "timestamp": datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S"),
+#             "value": value,
+#             "topic": msg.topic,
+#         }
+#
+#         # Save to MongoDB
+#         save_to_database(data)
+#
+#         # Emit data to WebSocket clients
+#         socketio.emit('new_data', data)
+#
+#     except Exception as e:
+#         print(f"Error processing message: {e}")
+
 def on_message(client, userdata, msg):
     """Callback when a message is received from the MQTT broker."""
     try:
@@ -76,10 +103,15 @@ def on_message(client, userdata, msg):
         save_to_database(data)
 
         # Emit data to WebSocket clients
-        socketio.emit('new_data', data)
+        # Forward the message to all active WebSocket clients
+        for ws in websockets:
+            try:
+                ws.send(payload)
+            except WebSocketError:
+                logger.debug("*** Error sending message to WebSocket.")
 
     except Exception as e:
-        print(f"Error processing message: {e}")
+        logger.debug(f"*** Error processing message: {e}")
 
 
 def mqtt_thread():
@@ -109,22 +141,46 @@ def get_data():
         return jsonify({"error": str(e)}), 500
 
 
-@socketio.on('connect')
-def handle_connect():
-    """Handle WebSocket client connection."""
-    client_ip = request.remote_addr
-    client_port = request.environ.get('REMOTE_PORT')
-    print(f'Client connected from {client_ip}:{client_port}')
-    logger.debug(f'******** Client connected from {client_ip}:{client_port}')
+# @socketio.on('connect')
+# def handle_connect():
+#     """Handle WebSocket client connection."""
+#     client_ip = request.remote_addr
+#     client_port = request.environ.get('REMOTE_PORT')
+#     print(f'Client connected from {client_ip}:{client_port}')
+#     logger.debug(f'******** Client connected from {client_ip}:{client_port}')
+#
+#
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     """Handle WebSocket client disconnection."""
+#     client_ip = request.remote_addr
+#     client_port = request.environ.get('REMOTE_PORT')
+#     print(f'Client disconnected from {client_ip}:{client_port}')
+#     logger.debug(f'******** Client disconnected from {client_ip}:{client_port}')
 
+@app.route('/ws')
+def websocket_endpoint():
+    """WebSocket endpoint."""
+    ws = request.environ.get('wsgi.websocket')
+    if not ws:
+        return "WebSocket connection required", 400
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    """Handle WebSocket client disconnection."""
-    client_ip = request.remote_addr
-    client_port = request.environ.get('REMOTE_PORT')
-    print(f'Client disconnected from {client_ip}:{client_port}')
-    logger.debug(f'******** Client disconnected from {client_ip}:{client_port}')
+    # Add the WebSocket to the global list
+    websockets.append(ws)
+
+    try:
+        while True:
+            # Keep the connection alive (No receive logic needed here for MQTT forwarding)
+            message = ws.receive()
+            if message is None:
+                break  # Close if client disconnects
+    except WebSocketError:
+        logger.debug("*** WebSocket disconnected.")
+    finally:
+        # Remove the WebSocket from the global list on disconnect
+        websockets.remove(ws)
+
+    return ""
 
 
 def main():
@@ -135,7 +191,11 @@ def main():
     mqtt_thread()
 
     logger.debug('******** Starting Flask-SocketIO server...')
-    socketio.run(app, host='127.0.0.1', port=5000, debug=True)
+    #socketio.run(app, host='127.0.0.1', port=5000, debug=True)
+    # Start the Flask server with Gevent WebSocket support
+    server = pywsgi.WSGIServer(('0.0.0.0', 5000), app, handler_class=WebSocketHandler)
+    print("Server running on http://0.0.0.0:5000")
+    server.serve_forever()
 
 
 main()

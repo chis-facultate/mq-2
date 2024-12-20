@@ -37,41 +37,77 @@
 
     <script>
         let chartInstance;
-        let socket = io.connect('wss://mq-2.onrender.com',
-            {
-                transports: ["websocket", "polling"],
-                reconnection: true
-            });
+        // let socket = io.connect('wss://mq-2.onrender.com',
+        //     {
+        //         transports: ["websocket", "polling"],
+        //         reconnection: true
+        //     });
+        //
+        // socket.on('connect', () => {
+        //     console.log('Socket.io connected');
+        // });
+        //
+        // socket.on('connect_error', (error) => {
+        //     console.log('Connection error:', error);
+        // });
+        //
+        // socket.on('connect_timeout', () => {
+        //     console.log('Connection timeout');
+        // });
+        //
+        // // Function to update the chart with new data via WebSocket
+        // socket.on('new_data', (data) => {
+        //     console.log('Received new data:', data);  // Debugging line
+        //
+        //     const timestamp = new Date(data.timestamp).toLocaleString();
+        //     const value = data.value;
+        //
+        //     // Add new data point to the chart
+        //     chartInstance.data.labels.push(timestamp);
+        //     chartInstance.data.datasets[0].data.push(value);
+        //
+        //     console.log(chartInstance.data.labels.toString());
+        //     console.log(chartInstance.data.datasets[0].data.toString());
+        //
+        //     // Update the chart
+        //     chartInstance.update();
+        // });
 
-        socket.on('connect', () => {
-            console.log('Socket.io connected');
-        });
+        const ws = new WebSocket('wss://https://mq-2.onrender.com/ws');
 
-        socket.on('connect_error', (error) => {
-            console.log('Connection error:', error);
-        });
+        ws.onopen = () => {
+            console.log('WebSocket connected');
+        };
 
-        socket.on('connect_timeout', () => {
-            console.log('Connection timeout');
-        });
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
 
-        // Function to update the chart with new data via WebSocket
-        socket.on('new_data', (data) => {
-            console.log('Received new data:', data);  // Debugging line
+        ws.onclose = (event) => {
+            console.log('WebSocket closed:', event);
+        };
 
-            const timestamp = new Date(data.timestamp).toLocaleString();
-            const value = data.value;
+        ws.onmessage = (event) => {
+            console.log('Received new data:', event.data); // Debugging line
 
-            // Add new data point to the chart
-            chartInstance.data.labels.push(timestamp);
-            chartInstance.data.datasets[0].data.push(value);
+            try {
+                const data = JSON.parse(event.data);
+                const timestamp = new Date(data.timestamp).toLocaleString();
+                const value = data.value;
 
-            console.log(chartInstance.data.labels.toString());
-            console.log(chartInstance.data.datasets[0].data.toString());
+                // Add new data point to the chart
+                chartInstance.data.labels.push(timestamp);
+                chartInstance.data.datasets[0].data.push(value);
 
-            // Update the chart
-            chartInstance.update();
-        });
+                console.log(chartInstance.data.labels.toString());
+                console.log(chartInstance.data.datasets[0].data.toString());
+
+                // Update the chart
+                chartInstance.update();
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
+            }
+        };
 
         // Function to fetch the initial data from the server
         async function fetchData() {
