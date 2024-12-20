@@ -11,7 +11,7 @@ from flask_socketio import SocketIO
 
 # Global variables
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode='gevent')  # Using Gevent as async mode
+socketio = SocketIO(app)  # Using Gevent as async mode
 
 # MQTT Broker details
 BROKER = "broker.hivemq.com"
@@ -26,7 +26,7 @@ def get_mongo_collection():
     DB_NAME = "iot_data"
     COLLECTION_NAME = "mqtt_messages"
     """Initialize MongoDB client and return the collection."""
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, ssl=True, ssl_cert_reqs='CERT_NONE')
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
     db = client[DB_NAME]
     return db[COLLECTION_NAME]
 
