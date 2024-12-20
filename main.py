@@ -151,5 +151,6 @@ def main():
     socketio.run(app, host='127.0.0.1', port='5000', debug=True, allow_unsafe_werkzeug=True)
 
 
+print('Executing __main__')
 if __name__ == '__main__':
     main()
