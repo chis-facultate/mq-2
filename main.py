@@ -143,6 +143,8 @@ def main():
     # Start MQTT client in a separate thread
     threading.Thread(target=mqtt_thread, daemon=True).start()
 
+    print('MQTT client started')
+
     # Run Flask-SocketIO server
     socketio.run(app, host='127.0.0.1', port='5000', debug=True, allow_unsafe_werkzeug=True)
 
