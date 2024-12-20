@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MQTT Data Plot</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/socket.io-client/dist/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
         /* Style the chart container to enable horizontal scrolling */
         .chart-container {
@@ -36,7 +36,7 @@
     </div>
 
     <script>
-        const socket = io('https://mq-2.onrender.com');  // Connect to the WebSocket server
+        const socket = io.connect('https://mq-2.onrender.com', {transports: ["websocket", "polling"]});  // Connect to the WebSocket server
         let chartInstance;
 
         // Function to fetch the initial data from the server
