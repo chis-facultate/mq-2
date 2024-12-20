@@ -36,7 +36,12 @@
     </div>
 
     <script>
-        const socket = io.connect('https://mq-2.onrender.com', {transports: ["websocket", "polling"]});  // Connect to the WebSocket server
+        let chartInstance;
+        let socket = io.connect('wss://mq-2.onrender.com',
+            {
+                transports: ["websocket", "polling"],
+                reconnection: true
+            });
 
         socket.on('connect', () => {
             console.log('Socket.io connected');
@@ -67,8 +72,6 @@
             // Update the chart
             chartInstance.update();
         });
-
-        let chartInstance;
 
         // Function to fetch the initial data from the server
         async function fetchData() {
