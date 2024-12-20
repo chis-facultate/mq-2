@@ -13,11 +13,6 @@ from flask_socketio import SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='gevent')  # Using Gevent as async mode
 
-# MongoDB connection details
-MONGO_URI = "mongodb+srv://user1:asdfsdfdzc13reqfvdf@cluster0.cve6w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-DB_NAME = "iot_data"
-COLLECTION_NAME = "mqtt_messages"
-
 # MQTT Broker details
 BROKER = "broker.hivemq.com"
 PORT = 1883
@@ -26,8 +21,12 @@ TOPIC = "sensor/mq2"
 
 # Connect to MongoDB
 def get_mongo_collection():
+    # MongoDB connection details
+    MONGO_URI = "mongodb+srv://user1:asdfsdfdzc13reqfvdf@cluster0.cve6w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    DB_NAME = "iot_data"
+    COLLECTION_NAME = "mqtt_messages"
     """Initialize MongoDB client and return the collection."""
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, ssl=True, ssl_cert_reqs='CERT_NONE')
     db = client[DB_NAME]
     return db[COLLECTION_NAME]
 
