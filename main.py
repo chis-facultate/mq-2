@@ -6,7 +6,7 @@ import threading
 import datetime
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from flask_socketio import SocketIO
 
 # Global variables
@@ -95,6 +95,17 @@ def mqtt_thread():
 def index():
     """Render the main page."""
     return render_template('index.html')
+
+
+@app.route('/data', methods=['GET'])
+def get_data():
+    """Fetch all data from the MongoDB collection."""
+    try:
+        data = list(collection.find({}, {"_id": 0}))  # Exclude MongoDB ObjectId
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 @socketio.on('connect')
