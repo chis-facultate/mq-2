@@ -22,3 +22,6 @@ simple-websocket==1.1.0
 urllib3==2.2.3
 Werkzeug==3.0.4
 wsproto==1.2.0
+
+paho-mqtt~=2.1.0
+pymongo~=4.10.1
