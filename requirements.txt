@@ -6,7 +6,6 @@ charset-normalizer==3.4.0
 click==8.1.7
 colorama==0.4.6
 dnspython==2.7.0
-eventlet==0.38.0
 Flask==3.0.3
 Flask-SocketIO==5.4.1
 gevent==24.11.1

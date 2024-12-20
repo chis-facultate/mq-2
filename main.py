@@ -1,6 +1,7 @@
 from gevent import monkey
 monkey.patch_all()
 
+import logging
 import threading
 import json
 import datetime
@@ -12,6 +13,13 @@ from flask_socketio import SocketIO
 # Global variables
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='gevent')  # Using Gevent as async mode
+
+# Set up logging
+logging.basicConfig(
+    level=logging.DEBUG,  # Capture all log levels
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+)
+logger = logging.getLogger(__name__)
 
 # MQTT Broker details
 BROKER = "broker.hivemq.com"
@@ -34,19 +42,19 @@ def save_to_database(data):
     """Try to save data to MongoDB."""
     try:
         get_mongo_collection().insert_one(data)
-        print(f"Data inserted into MongoDB: {data}")
+        logger.debug(f"******** Data inserted into MongoDB: {data}")
 
     except Exception as e:
-        print(f"Failed to save data to MongoDB: {e}")
+        logger.debug(f"******** Failed to save data to MongoDB: {e}")
 
 
 def on_connect(client, userdata, flags, rc):
     """Callback when the client connects to the MQTT broker."""
     if rc == 0:
-        print("Connected to MQTT Broker")
+        logger.debug("******** Connected to MQTT Broker")
         client.subscribe(TOPIC)
     else:
-        print(f"Failed to connect, return code {rc}")
+        logger.debug(f"******** Failed to connect, return code {rc}")
 
 
 def on_message(client, userdata, msg):
@@ -56,7 +64,7 @@ def on_message(client, userdata, msg):
         timestamp = payload["timestamp"]
         value = float(payload["value"])
 
-        print(f"Data received -> Timestamp: {timestamp}, Value: {value}")
+        logger.debug(f"******** Data received -> Timestamp: {timestamp}, Value: {value}")
 
         data = {
             "timestamp": datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S"),
@@ -80,9 +88,9 @@ def mqtt_thread():
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect(BROKER, PORT, 60)
+    logger.debug('******** before loop_start')
     client.loop_start()  # This is the key change - using loop_start() instead of loop_forever() in gevent
-    while True:
-        gevent.sleep(1)  # Ensure the loop is cooperatively yielding to Gevent's event loop
+    logger.debug('******** after loop_start')
 
 
 @app.route('/', methods=['GET'])
@@ -107,6 +115,7 @@ def handle_connect():
     client_ip = request.remote_addr
     client_port = request.environ.get('REMOTE_PORT')
     print(f'Client connected from {client_ip}:{client_port}')
+    logger.debug(f'******** Client connected from {client_ip}:{client_port}')
 
 
 @socketio.on('disconnect')
@@ -115,15 +124,17 @@ def handle_disconnect():
     client_ip = request.remote_addr
     client_port = request.environ.get('REMOTE_PORT')
     print(f'Client disconnected from {client_ip}:{client_port}')
+    logger.debug(f'******** Client disconnected from {client_ip}:{client_port}')
 
 
 def main():
     """Main entry point of the application."""
-    print('Starting MQTT client in a separate thread...')
-    mqtt_thread_instance = threading.Thread(target=mqtt_thread, daemon=True)
-    mqtt_thread_instance.start()
+    logger.debug('******** Starting MQTT client in a separate thread...')
+    #mqtt_thread_instance = threading.Thread(target=mqtt_thread, daemon=True)
+    #mqtt_thread_instance.start()
+    mqtt_thread()
 
-    print('Starting Flask-SocketIO server...')
+    logger.debug('******** Starting Flask-SocketIO server...')
     socketio.run(app, host='127.0.0.1', port=5000, debug=True)
 
 
