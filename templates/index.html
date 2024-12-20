@@ -17,15 +17,14 @@
             position: relative;
         }
 
-        /* Fixed width for the chart */
+        /* Canvas will be wider to fit all data */
         #dataChart {
-            width: 1000px; /* Make it large enough for horizontal scrolling */
             height: 100%; /* Take full height of the container */
         }
 
-        /* Optional: Make sure the canvas fits the container */
+        /* Ensure the chart canvas has a large width for all the data */
         canvas {
-            width: 100% !important;
+            width: 3000px !important; /* Set a wide width to hold all the data */
             height: 100% !important;
         }
     </style>
@@ -76,6 +75,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         scales: {
                             x: {
                                 title: {
@@ -92,7 +92,9 @@
                                 title: {
                                     display: true,
                                     text: 'Value'
-                                }
+                                },
+                                suggestedMin: 0,  // Suggest minimum value for Y-axis (optional)
+                                beginAtZero: true   // Ensure Y-axis starts at 0
                             }
                         }
                     }
@@ -111,8 +113,9 @@
             chartInstance.data.labels.push(timestamp);
             chartInstance.data.datasets[0].data.push(value);
 
-            // Optionally, limit the number of points in the chart
-            if (chartInstance.data.labels.length > 50) {
+            // Optionally, limit the number of points in the chart (if required)
+            const maxPoints = 1000;  // Limit for data points (all data can be kept, but shown part-wise)
+            if (chartInstance.data.labels.length > maxPoints) {
                 chartInstance.data.labels.shift();
                 chartInstance.data.datasets[0].data.shift();
             }
