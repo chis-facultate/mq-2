@@ -81,8 +81,8 @@ def mqtt_thread():
     client.on_message = on_message
     client.connect(BROKER, PORT, 60)
     client.loop_start()  # This is the key change - using loop_start() instead of loop_forever() in gevent
-    while True:
-        sleep(1)  # Ensure the loop is cooperatively yielding to Gevent's event loop
+    # while True:
+    #     sleep(1)  # Ensure the loop is cooperatively yielding to Gevent's event loop
 
 
 @app.route('/', methods=['GET'])
