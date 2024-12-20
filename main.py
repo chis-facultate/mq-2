@@ -12,7 +12,7 @@ from flask_socketio import SocketIO
 
 # Global variables
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode='gevent')  # Using Gevent as async mode
+socketio = SocketIO(app, async_mode='gevent', logger=True, engineio_logger=True)  # Using Gevent as async mode
 
 # Set up logging
 logging.basicConfig(
