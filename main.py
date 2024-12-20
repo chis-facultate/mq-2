@@ -11,7 +11,7 @@ from flask_socketio import SocketIO
 
 # Global variables
 app = Flask(__name__)
-socketio = SocketIO(app)  # Using Gevent as async mode
+socketio = SocketIO(app, async_mode='gevent')  # Using Gevent as async mode
 
 # MQTT Broker details
 BROKER = "broker.hivemq.com"
@@ -69,7 +69,7 @@ def on_message(client, userdata, msg):
         save_to_database(data)
 
         # Emit data to WebSocket clients
-        socketio.emit('mqtt_message', data)
+        socketio.emit('new_data', data)
 
     except Exception as e:
         print(f"Error processing message: {e}")

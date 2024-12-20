@@ -5,69 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MQTT Data Plot</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client/dist/socket.io.min.js"></script>
+    <style>
+        .chart-container {
+            width: 100%;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+
+        #dataChart {
+            width: 1500px;
+            height: 400px;
+        }
+    </style>
 </head>
 <body>
     <h1>MQTT Sensor Data</h1>
-    <canvas id="dataChart" width="400" height="200"></canvas>
+    <div class="chart-container">
+        <canvas id="dataChart"></canvas>
+    </div>
 
     <script>
+        const socket = io('https://mq-2.onrender.com');  // Connect to the WebSocket server
+        let chartInstance;
+
+        // Function to fetch the initial data from the server
         async function fetchData() {
-    try {
-        const response = await fetch('https://mq-2.onrender.com/data');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (!Array.isArray(data)) {
-            throw new Error("Expected an array but got something else.");
-        }
+            try {
+                const response = await fetch('https://mq-2.onrender.com/data');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (!Array.isArray(data)) {
+                    throw new Error("Expected an array but got something else.");
+                }
 
-        // Extract data for the chart
-        const timestamps = data.map(item => item.timestamp);
-        const values = data.map(item => item.value);
+                // Extract data for the chart
+                const timestamps = data.map(item => item.timestamp);
+                const values = data.map(item => item.value);
 
-        // Format timestamps for display
-        const formattedTimestamps = timestamps.map(ts => new Date(ts).toLocaleString());
+                // Format timestamps for display
+                const formattedTimestamps = timestamps.map(ts => new Date(ts).toLocaleString());
 
-        // Render chart
-        const ctx = document.getElementById('dataChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: formattedTimestamps,
-                datasets: [{
-                    label: 'Sensor Value',
-                    data: values,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderWidth: 1,
-                    fill: true,
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Timestamp'
-                        }
+                // Create the chart
+                const ctx = document.getElementById('dataChart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: formattedTimestamps,
+                        datasets: [{
+                            label: 'Sensor Value',
+                            data: values,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderWidth: 1,
+                            fill: true,
+                        }]
                     },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Value'
+                    options: {
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Timestamp'
+                                },
+                                ticks: {
+                                    autoSkip: true,
+                                    maxRotation: 45,
+                                    minRotation: 30
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
                         }
                     }
-                }
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
             }
+        }
+
+        // Function to update the chart with new data via WebSocket
+        socket.on('new_data', (data) => {
+            const timestamp = new Date(data.timestamp).toLocaleString();
+            const value = data.value;
+
+            // Add new data point to the chart
+            chartInstance.data.labels.push(timestamp);
+            chartInstance.data.datasets[0].data.push(value);
+
+            // Optionally, limit the number of points in the chart
+            if (chartInstance.data.labels.length > 50) {
+                chartInstance.data.labels.shift();
+                chartInstance.data.datasets[0].data.shift();
+            }
+
+            // Update the chart
+            chartInstance.update();
         });
-    } catch (error) {
-        console.error('Error fetching data:', error);
-    }
-}
 
-
-        // Fetch data and plot chart on page load
+        // Fetch initial data when the page loads
         window.onload = fetchData;
     </script>
 </body>
