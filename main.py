@@ -1,8 +1,8 @@
 from gevent import monkey
 monkey.patch_all()
 
-import json
 import threading
+import json
 import datetime
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
@@ -18,14 +18,12 @@ BROKER = "broker.hivemq.com"
 PORT = 1883
 TOPIC = "sensor/mq2"
 
-
 # Connect to MongoDB
 def get_mongo_collection():
-    # MongoDB connection details
+    """Initialize MongoDB client and return the collection."""
     MONGO_URI = "mongodb+srv://user1:asdfsdfdzc13reqfvdf@cluster0.cve6w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     DB_NAME = "iot_data"
     COLLECTION_NAME = "mqtt_messages"
-    """Initialize MongoDB client and return the collection."""
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
     db = client[DB_NAME]
     return db[COLLECTION_NAME]
@@ -76,12 +74,14 @@ def on_message(client, userdata, msg):
 
 
 def mqtt_thread():
-    """Run the MQTT client."""
+    """Run the MQTT client in a gevent-friendly way."""
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect(BROKER, PORT, 60)
-    client.loop_forever()
+    client.loop_start()  # This is the key change - using loop_start() instead of loop_forever() in gevent
+    while True:
+        gevent.sleep(1)  # Ensure the loop is cooperatively yielding to Gevent's event loop
 
 
 @app.route('/', methods=['GET'])

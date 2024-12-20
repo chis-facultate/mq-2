@@ -113,13 +113,6 @@
             chartInstance.data.labels.push(timestamp);
             chartInstance.data.datasets[0].data.push(value);
 
-            // Optionally, limit the number of points in the chart (if required)
-            const maxPoints = 1000;  // Limit for data points (all data can be kept, but shown part-wise)
-            if (chartInstance.data.labels.length > maxPoints) {
-                chartInstance.data.labels.shift();
-                chartInstance.data.datasets[0].data.shift();
-            }
-
             // Update the chart
             chartInstance.update();
         });
