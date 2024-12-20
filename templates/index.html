@@ -12,53 +12,60 @@
 
     <script>
         async function fetchData() {
-            try {
-                const response = await fetch('/data');
-                const data = await response.json();
+    try {
+        const response = await fetch('https://mq-2.onrender.com/data');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+            throw new Error("Expected an array but got something else.");
+        }
 
-                // Extract data for the chart
-                const timestamps = data.map(item => item.timestamp);
-                const values = data.map(item => item.value);
+        // Extract data for the chart
+        const timestamps = data.map(item => item.timestamp);
+        const values = data.map(item => item.value);
 
-                // Format timestamps for display
-                const formattedTimestamps = timestamps.map(ts => new Date(ts).toLocaleString());
+        // Format timestamps for display
+        const formattedTimestamps = timestamps.map(ts => new Date(ts).toLocaleString());
 
-                // Render chart
-                const ctx = document.getElementById('dataChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: formattedTimestamps,
-                        datasets: [{
-                            label: 'Sensor Value',
-                            data: values,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderWidth: 1,
-                            fill: true,
-                        }]
+        // Render chart
+        const ctx = document.getElementById('dataChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: formattedTimestamps,
+                datasets: [{
+                    label: 'Sensor Value',
+                    data: values,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderWidth: 1,
+                    fill: true,
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Timestamp'
+                        }
                     },
-                    options: {
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Timestamp'
-                                }
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Value'
-                                }
-                            }
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Value'
                         }
                     }
-                });
-            } catch (error) {
-                console.error('Error fetching data:', error);
+                }
             }
-        }
+        });
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
 
         // Fetch data and plot chart on page load
         window.onload = fetchData;
