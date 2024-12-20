@@ -10,16 +10,16 @@ from flask import Flask, request, jsonify, render_template
 from flask_socketio import SocketIO
 
 # Global variables
-app = Flask(__name__)  # Flask app instance
-socketio = SocketIO(app, cors_allowed_origins="*")
+app = Flask(__name__)
+socketio = SocketIO(app)
 # MongoDB connection details
 MONGO_URI = "mongodb+srv://user1:asdfsdfdzc13reqfvdf@cluster0.cve6w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"  # Replace with your MongoDB URI
 DB_NAME = "iot_data"
 COLLECTION_NAME = "mqtt_messages"
 # MQTT Broker details
-BROKER = "broker.hivemq.com"  # Replace with your broker address
+BROKER = "broker.hivemq.com"
 PORT = 1883
-TOPIC = "sensor/mq2"  # Replace with your topic
+TOPIC = "sensor/mq2"
 # Buffer for storing data when MongoDB is unavailable
 buffer = []
 
