@@ -106,12 +106,17 @@
 
         // Function to update the chart with new data via WebSocket
         socket.on('new_data', (data) => {
+            console.log('Received new data:', data);  // Debugging line
+
             const timestamp = new Date(data.timestamp).toLocaleString();
             const value = data.value;
 
             // Add new data point to the chart
             chartInstance.data.labels.push(timestamp);
             chartInstance.data.datasets[0].data.push(value);
+
+            console.log(chartInstance.data.labels.toString());
+            console.log(chartInstance.data.datasets[0].data.toString());
 
             // Update the chart
             chartInstance.update();
