@@ -23,25 +23,19 @@ BROKER = "broker.hivemq.com"
 PORT = 1883
 TOPIC = "sensor/mq2"
 
+
 # Connect to MongoDB
-try:
-    mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-    db = mongo_client[DB_NAME]
-    collection = db[COLLECTION_NAME]
-    print("MongoDB connected successfully.")
-except Exception as e:
-    print(f"MongoDB connection failed: {e}")
-    mongo_client = None
+def get_mongo_collection():
+    """Initialize MongoDB client and return the collection."""
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    db = client[DB_NAME]
+    return db[COLLECTION_NAME]
 
 
 def save_to_database(data):
     """Try to save data to MongoDB."""
     try:
-        if mongo_client is None or not mongo_client.is_primary:
-            raise Exception("MongoDB not connected")
-
-        # Insert data into MongoDB
-        collection.insert_one(data)
+        get_mongo_collection().insert_one(data)
         print(f"Data inserted into MongoDB: {data}")
 
     except Exception as e:
@@ -101,11 +95,10 @@ def index():
 def get_data():
     """Fetch all data from the MongoDB collection."""
     try:
-        data = list(collection.find({}, {"_id": 0}))  # Exclude MongoDB ObjectId
+        data = list(get_mongo_collection().find({}, {"_id": 0}))  # Exclude MongoDB ObjectId
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 
 @socketio.on('connect')
