@@ -1,5 +1,5 @@
-import eventlet
-eventlet.monkey_patch()
+from gevent import monkey
+monkey.patch_all()
 
 import json
 import threading
@@ -11,7 +11,7 @@ from flask_socketio import SocketIO
 
 # Global variables
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode='eventlet')  # Using Eventlet as async mode
+socketio = SocketIO(app, async_mode='gevent')  # Using Gevent as async mode
 
 # MongoDB connection details
 MONGO_URI = "mongodb+srv://user1:asdfsdfdzc13reqfvdf@cluster0.cve6w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
