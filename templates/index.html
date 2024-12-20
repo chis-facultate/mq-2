@@ -7,15 +7,26 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/socket.io-client/dist/socket.io.min.js"></script>
     <style>
+        /* Style the chart container to enable horizontal scrolling */
         .chart-container {
             width: 100%;
-            overflow-x: auto;
+            height: 400px;  /* Fixed height for the chart container */
+            overflow-x: auto;  /* Horizontal scrolling */
+            overflow-y: hidden; /* Hide vertical scroll bar */
             padding: 20px 0;
+            position: relative;
         }
 
+        /* Fixed width for the chart */
         #dataChart {
-            width: 1500px;
-            height: 400px;
+            width: 1000px; /* Make it large enough for horizontal scrolling */
+            height: 100%; /* Take full height of the container */
+        }
+
+        /* Optional: Make sure the canvas fits the container */
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
         }
     </style>
 </head>
@@ -64,6 +75,7 @@
                         }]
                     },
                     options: {
+                        responsive: true,
                         scales: {
                             x: {
                                 title: {
