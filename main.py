@@ -1,8 +1,7 @@
-import threading
-
 import eventlet
 eventlet.monkey_patch()
 
+import threading
 import json
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
