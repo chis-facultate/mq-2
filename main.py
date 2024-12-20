@@ -164,28 +164,10 @@ def websocket_endpoint():
     """WebSocket endpoint."""
     # Check if the request is a WebSocket connection
     ws = request.environ.get('wsgi.websocket')
-    if not ws:
-        return "WebSocket connection required", 400
-
     # Add the WebSocket to the global list of connections
     websockets.append(ws)
     logger.debug("*** New WebSocket connection established.")
-
-    try:
-        while True:
-            pass
-            # Keep the connection alive; no need to receive anything unless you want to
-            # message = ws.receive()  # Optionally, you can process any received messages
-            # if message is None:
-            #    break  # WebSocket connection closed, break the loop
-    except WebSocketError as e:
-        logger.debug(f"*** WebSocket error: {str(e)}")
-    finally:
-        # Remove the WebSocket from the list when it disconnects
-        websockets.remove(ws)
-        logger.debug("*** WebSocket disconnected.")
-
-    return "WS CLOSED"
+    return 'g'
 
 
 def main():
